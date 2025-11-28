@@ -50,7 +50,11 @@ public class CharacterController2D : MonoBehaviour
 	[System.Serializable]
 	public class BoolEvent : UnityEvent<bool> { }
 
-	private void Awake()
+    public bool FacingRight
+    {
+        get { return m_FacingRight; }
+    }
+    private void Awake()
 	{
 		m_Rigidbody2D = GetComponent<Rigidbody2D>();
 		animator = GetComponent<Animator>();

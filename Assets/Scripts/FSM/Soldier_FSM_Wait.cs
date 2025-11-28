@@ -32,9 +32,9 @@ public class Soldier_FSM_Wait : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		
-		if(soldier.tool.DistanceToPlayer() < 2f){
+		/*if(soldier.tool.DistanceToPlayer() < 2f){
 			return Soldier.State.RUN;
-		}
+		}*/
 		return Soldier.State.WAIT;
 	}
 	

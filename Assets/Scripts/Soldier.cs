@@ -127,14 +127,23 @@ public class Soldier : MonoBehaviour
 	void Update()
 	{
 		FirstInUpdate();
-	
+
 		GameManager.instance.DispStr("Soldier" + ":" + currentState + ":" + new Vector2(position.x, position.y));
 	
 		// ===================================================
 		// AIを作りましょう
 		State nextState = availableStates[(int)currentState].CheckTransitions();
-		// 死亡は強制的に変更
-		if (life <= 0 && currentState != State.DEAD) {
+
+		MineTrap trap = GameObject.FindObjectOfType<MineTrap>();
+
+        if (trap != null && trap.Attattayo)
+        {
+            nextState = State.RUN;
+            trap.Attattayo = false;
+        }
+
+        // 死亡は強制的に変更
+        if (life <= 0 && currentState != State.DEAD) {
 			nextState = State.DEAD;
 		}
 		
