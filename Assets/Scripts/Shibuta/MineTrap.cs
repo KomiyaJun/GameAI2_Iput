@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections; // Coroutine‚ðŽg‚¤‚½‚ß‚É•K—v
 
 public class MineTrap : MonoBehaviour
 {
@@ -9,7 +10,15 @@ public class MineTrap : MonoBehaviour
         if (collision.CompareTag("Player"))
         {
             Attattayo = true;
-            Destroy(gameObject);
+            StartCoroutine(DestroyAfterDelay());
         }
+    }
+
+    private IEnumerator DestroyAfterDelay()
+    {
+
+        yield return null;
+
+        Destroy(gameObject);
     }
 }
