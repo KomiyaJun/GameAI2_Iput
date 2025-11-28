@@ -25,7 +25,7 @@ public class Soldier_FSM_Damage : Soldier_FSM_Base
 	public override Soldier.State CheckTransitions()
 	{
 		if(!soldier.isHitted){
-			return Soldier.State.WAIT;
+			return Soldier.State.ESCAPE;
 		}
 		return Soldier.State.DAMAGE;
 	}

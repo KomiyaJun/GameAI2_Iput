@@ -39,15 +39,23 @@ public class Soldier : MonoBehaviour
 		MELEE_ATTACK,
 		DAMAGE,
 		DEAD,
+		CHASE,
+		ESCAPE,
 	};
 	State currentState = 0;
 	
 	private List<Soldier_FSM_Base> availableStates = new List<Soldier_FSM_Base>();
-	
-	// ------------------------------------------------------
-	// Start is called before the first frame update
-	void Start()
+
+    public bool isTrapTouched = false;	//プレイヤーが罠を踏んだか
+	public SpriteRenderer spriteRenderer;	//表示のオンオフ
+	public bool isInvisible = false;	//透明になっているか
+
+    // ------------------------------------------------------
+    // Start is called before the first frame update
+    void Start()
 	{
+		spriteRenderer = GetComponent<SpriteRenderer>();
+
 		tool = new EnemyComp(this.gameObject);
 		animator = GetComponent<Animator>();
 		attackCheck = transform.Find("AttackCheck").transform;
@@ -58,6 +66,8 @@ public class Soldier : MonoBehaviour
 		availableStates.Add(new Soldier_FSM_Attack(this));
 		availableStates.Add(new Soldier_FSM_Damage(this));
 		availableStates.Add(new Soldier_FSM_Dead(this));
+		availableStates.Add(new Soldier_FSM_Chase(this));
+		availableStates.Add(new Soldier_FSM_Escape(this));
 
 		currentState = State.WAIT;
 		availableStates[(int)currentState].OnEnter();
@@ -200,4 +210,64 @@ public class Soldier : MonoBehaviour
 		hitCoroutine = null;
 	}
 	
+	//透明化をオフ
+	public void OffInvisible()
+	{
+		isInvisible = false;
+		spriteRenderer.enabled = true;
+		Debug.Log("可視");
+		spriteRenderer.color = new Color(0, 0, 0, 255);
+	}
+	
+
+	//透明化をオン
+	public void OnInvisible()
+	{
+		isInvisible = true;
+		StartCoroutine(StartFadeAnimation(spriteRenderer, 1f));
+		for(int i = 0; i < 255; i++)
+		{
+			spriteRenderer.color -= new Color(0,0,0,1);
+		}
+		Debug.Log("不可視");
+	}
+
+	//トラップが踏まれた
+    public void OnTrapTouched()
+    {
+		isTrapTouched = true;
+    }
+
+	//徐々に透明にしていく
+    IEnumerator StartFadeAnimation(SpriteRenderer sr, float duration)
+    {
+        // 開始時の透明度
+        float startAlpha = sr.color.a;
+        // 経過時間
+        float elapsedTime = 0f;
+
+        // 透明度 (a) が 0.0 になるまでループを続ける
+        while (elapsedTime < duration)
+        {
+            // 時間の経過を記録
+            elapsedTime += Time.deltaTime;
+
+            // 経過時間に基づき、新しい透明度を計算
+            // 0 から duration の間で、alphaを startAlpha から 0 へ線形補間
+            float newAlpha = Mathf.Lerp(startAlpha, 0f, elapsedTime / duration);
+
+            // スプライトの色を更新
+            Color newColor = sr.color;
+            newColor.a = newAlpha;
+            sr.color = newColor;
+
+            // 次のフレームまで待機
+            yield return null;
+        }
+
+        // 念のため、最後に完全に透明に設定
+        Color finalColor = sr.color;
+        finalColor.a = 0f;
+        sr.color = finalColor;
+    }
 }
