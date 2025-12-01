@@ -10,11 +10,19 @@ public class Soldier_FSM_Chase : Soldier_FSM_Base
     public override void OnEnter()
     {
         soldier.RunAction();
-        soldier.OnInvisible();  //開始時、透明に
+
+        // 透明化(OnInvisible)はコルーチンの中でタイミングよく呼ぶので、ここでは削除します
+        // soldier.OnInvisible(); 
+
+        // コルーチン開始
+        soldier.StartCoroutine(soldier.PlayChaseStartAnimation(1.0f, 0.5f));
     }
 
+    // OnUpdateの変更は不要です（isAnimatingを見てreturnする仕組みのまま）
     public override void OnUpdate()
     {
+        if (soldier.isAnimating) return;
+
         soldier.facingLeft = soldier.tool.IsPlayerLeftside();
         if (soldier.facingLeft)
         {
