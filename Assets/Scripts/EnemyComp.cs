@@ -42,5 +42,17 @@ public class EnemyComp {
 		}
 		return facingLeft;
 	}
-	
+
+    public bool IsPlayerFacingRight()
+    {
+        // プレイヤーオブジェクトから CharacterController2D コンポーネントを取得
+        CharacterController2D playerController = player.GetComponent<CharacterController2D>();
+
+        if (playerController != null)
+        {
+            // プレイヤーの FacingRight プロパティを参照
+            return playerController.FacingRight;
+        }
+        return true; // コンポーネントがない場合のデフォルト値
+    }
 }
