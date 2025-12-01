@@ -32,7 +32,7 @@ public class Soldier_FSM_Attack : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		if(timer < 0){
-			return Soldier.State.WAIT;
+			return Soldier.State.ESCAPE;
 		}
 		return Soldier.State.MELEE_ATTACK;
 	}

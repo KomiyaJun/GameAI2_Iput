@@ -48,7 +48,9 @@ public class Soldier : MonoBehaviour
 
     public bool isTrapTouched = false;	//プレイヤーが罠を踏んだか
 	public SpriteRenderer spriteRenderer;	//表示のオンオフ
-	public bool isInvisible = false;	//透明になっているか
+	public bool isInvisible = false;    //透明になっているか
+	public bool isAnimating = false;    //アニメーションを行っているか
+	public Transform targetTransform = null;	//アニメーションに利用するTransform
 
     // ------------------------------------------------------
     // Start is called before the first frame update
@@ -224,12 +226,14 @@ public class Soldier : MonoBehaviour
 	public void OnInvisible()
 	{
 		isInvisible = true;
-		StartCoroutine(StartFadeAnimation(spriteRenderer, 1f));
-		for(int i = 0; i < 255; i++)
-		{
-			spriteRenderer.color -= new Color(0,0,0,1);
-		}
-		Debug.Log("不可視");
+		spriteRenderer.color = new Color(0, 0, 0, 0);
+
+		//StartCoroutine(StartFadeAnimation(spriteRenderer, 1f));
+		//for(int i = 0; i < 255; i++)
+		//{
+		//	spriteRenderer.color -= new Color(0,0,0,1);
+		//}
+		//Debug.Log("不可視");
 	}
 
 	//トラップが踏まれた
@@ -269,5 +273,60 @@ public class Soldier : MonoBehaviour
         Color finalColor = sr.color;
         finalColor.a = 0f;
         sr.color = finalColor;
+    }
+
+    public IEnumerator PlayChaseStartAnimation(float targetYScale, float duration)
+    {
+        if (targetTransform == null) yield break;
+
+        isAnimating = true;
+
+        // ★重要: 現在のXとZのスケールを保存しておく
+        float preservedX = targetTransform.localScale.x;
+        float preservedZ = targetTransform.localScale.z;
+
+        // Y軸だけ0の状態 (XとZは元のまま)
+        Vector3 startScaleVec = new Vector3(preservedX, 0f, preservedZ);
+
+        // Y軸だけ目標値の状態 (XとZは元のまま)
+        Vector3 targetScaleVec = new Vector3(preservedX, targetYScale, preservedZ);
+
+        float halfDuration = duration / 2f;
+
+        // --- 1. 伸びる (Y: 0 -> target) ---
+        // スタート地点をセット
+        targetTransform.localScale = startScaleVec;
+
+        float timer = 0f;
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / halfDuration;
+
+            // 保存したX,Zを維持したまま、Yだけ変化させる
+            targetTransform.localScale = Vector3.Lerp(startScaleVec, targetScaleVec, Mathf.SmoothStep(0f, 1f, t));
+            yield return null;
+        }
+        targetTransform.localScale = targetScaleVec;
+
+        // --- 2. 透明化 & 移動開始 ---
+        OnInvisible();
+        isAnimating = false; // 移動ロック解除
+
+        // ※注意: 移動開始後に向き(Xスケール)が変わる可能性がある場合、
+        // ここで最新のXを取得しなおす必要が出るかもしれませんが、
+        // 透明中なので基本的には元のpreservedXを使って戻して問題ありません。
+
+        // --- 3. 縮む (Y: target -> 0) ---
+        timer = 0f;
+        while (timer < halfDuration)
+        {
+            timer += Time.deltaTime;
+            float t = timer / halfDuration;
+
+            targetTransform.localScale = Vector3.Lerp(targetScaleVec, startScaleVec, t);
+            yield return null;
+        }
+        targetTransform.localScale = startScaleVec;
     }
 }
