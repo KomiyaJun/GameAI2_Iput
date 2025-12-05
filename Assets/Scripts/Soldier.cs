@@ -50,7 +50,8 @@ public class Soldier : MonoBehaviour
 	public SpriteRenderer spriteRenderer;	//表示のオンオフ
 	public bool isInvisible = false;    //透明になっているか
 	public bool isAnimating = false;    //アニメーションを行っているか
-	public Transform targetTransform = null;	//アニメーションに利用するTransform
+	public Transform targetTransform = null;    //アニメーションに利用するTransform
+	public bool isReverseFacing = false;
 
     // ------------------------------------------------------
     // Start is called before the first frame update
@@ -128,6 +129,7 @@ public class Soldier : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
+
 		FirstInUpdate();
 
 		GameManager.instance.DispStr("Soldier" + ":" + currentState + ":" + new Vector2(position.x, position.y));
@@ -337,5 +339,18 @@ public class Soldier : MonoBehaviour
             yield return null;
         }
         targetTransform.localScale = startScaleVec;
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.tag == "leftwall")
+		{
+			isReverseFacing = true;
+		}
+		if(collision.gameObject.tag == "rightwall")
+		{
+			isReverseFacing = false;
+		}
+
     }
 }

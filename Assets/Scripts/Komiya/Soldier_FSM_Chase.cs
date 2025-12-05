@@ -18,19 +18,30 @@ public class Soldier_FSM_Chase : Soldier_FSM_Base
         soldier.StartCoroutine(soldier.PlayChaseStartAnimation(1.0f, 0.5f));
     }
 
+    int reverse = 1;
+
     // OnUpdateの変更は不要です（isAnimatingを見てreturnする仕組みのまま）
     public override void OnUpdate()
     {
         if (soldier.isAnimating) return;
 
-        soldier.facingLeft = soldier.tool.IsPlayerLeftside();
-        if (soldier.facingLeft)
+        if (soldier.isReverseFacing)
         {
-            soldier.speed.x = -2.5f;
+            reverse = -1;
         }
         else
         {
-            soldier.speed.x = 2.5f;
+            reverse = 1;
+        }
+
+            soldier.facingLeft = soldier.tool.IsPlayerLeftside();
+        if (soldier.facingLeft)
+        {
+            soldier.speed.x = -5.0f * reverse;
+        }
+        else
+        {
+            soldier.speed.x = 5.0f * reverse;
         }
 
         if (soldier.isInvisible && soldier.tool.DistanceToPlayer() < 3f)
