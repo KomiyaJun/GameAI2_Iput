@@ -34,6 +34,9 @@ public enum BlackBoardKey {
     Move,
     Target,
     Time,
+
+    SquadState,     // 0: Search, 1: Chase
+    BatCommand,     // 0: None, 1: Dash (RangeHit), 2: Rotate (MeleeHit)
 }
 
 public class BlackBoard
