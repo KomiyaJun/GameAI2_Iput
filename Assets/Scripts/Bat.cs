@@ -4,253 +4,333 @@ using UnityEngine;
 
 public class Bat : MonoBehaviour
 {
-	public float life = 10;
-	public int set = 0;
-	public bool useBehaviorTree = false;
-	
-	bool isInvincible = false;
-	bool isHitted = false;
-	
-	// 自身のanimatorの保持
-	Animator animator;
-	// 便利関数つめあわせ
-	public EnemyComp tool;
-	private Coroutine hitCoroutine;
-	
-	// ------------------------------------------------------
-	// #1 キャラクターの動き（身体）
-	// 向き： true の時に左向き、false の時に右向き
-	public bool facingLeft = true;
-	// 移動速度
-	public Vector2 speed = Vector2.zero;	// x:右が+。左が-  y:上が+、下が-
-	// 位置；参照用
-	Vector2 position;
-	float timer;
-	
-	// ------------------------------------------------------
-	// #2 意思決定
-	// ステート
-	enum State {
-		WAIT,
-		MOVE,
-		DEAD,
-	};
-	State state = 0;
-	int step;
-	// ステートを nextStateにする
-	void StateChange(State nextState){
-		state = nextState;
-		step = 0;
-	}
-	
-	// ------------------------------------------------------
-	// #3 マルチエージェント
-	public Bat[] teamMember;
-	// 以下、例えば、
-	public bool leader = false;
-	// 待機状態からの移動許可の有無
-	// trueなら移動可、false なら移動不可
-	public bool moveOK = false;
-	public void SetMoveEnable(bool value){
-		moveOK = value;
-	}
-	
-	// ビヘイビアツリーを使う場合
-	private TreeNode_Base rootNode = null;
+    public float life = 10;
+    public int set = 0;
 
-	// Start is called before the first frame update
-	void Start()
-	{
-		animator = GetComponent<Animator>();
-		tool = new EnemyComp(this.gameObject);
-		// チームメンバーを取得
-		GameObject[] allies = tool.GetSinblings();
-		teamMember = new Bat[allies.Length];
-		for (int i = 0; i < teamMember.Length; i++)
-		{
-			teamMember[i] = allies[i].GetComponent<Bat>();
-		}
-		StateChange(State.WAIT);
+    // リーダーから渡されるブラックボード
+    private BlackBoard squadBoard;
 
-		if (useBehaviorTree)
-		{
-			rootNode = new Selector_IsAlive(this);
-		}
-	}
-	
-	void OnDestroy()
-	{
-		if(hitCoroutine != null)
-		{
-			StopCoroutine(hitCoroutine);
-			hitCoroutine = null;
-		}
-	}
-	
-	// Updateの最初に行う
-	void FirstInUpdate()
-	{
-		position = transform.position;
-	}
-	
-	// 待機
-	void Wait()
-	{
-		facingLeft = tool.IsPlayerLeftside();
-		
-		speed.x = 0.0f;    // 右が+、左が-になります
-		speed.y = 0.0f;    // 上が+、下が-になります
-		
-		// 例えば
-		if(leader && !moveOK){
-			if(tool.DistanceXToPlayer() < 2f){
-				for(int i=0;i<teamMember.Length;i++){
-					if(teamMember[i] != null && teamMember[i].gameObject != null){
-						teamMember[i].SetMoveEnable(true);
-					}
-				}
-				// 自分も
-				SetMoveEnable(true);
-			}
-		}
-		
-		if(moveOK){
-			StateChange(State.MOVE);
-		}
-	}
-	
-	void Move()
-	{
-		speed.y = 2f*Mathf.Sin(Time.time*2.5f);
-	}
-	
-	// やられた
-	void Dead()
-	{
-		switch(step){
-			case 0:
-				animator.SetBool("IsDead", true);
-				speed.x = 0.0f;
-				speed.y = 0.0f;
-				timer = 5f;
-				step++;
-				break;
-			case 1:
-				timer -= Time.deltaTime;
-				if(timer < 0){
-					step++;
-				}
-				break;
-			case 2:
-				Destroy(gameObject);
-				break;	
-		}
-		speed.y -= 0.2f;
-	}
-	
-	public void DeadAction()
-	{
-		animator.SetBool("IsDead", true);		
-	}
+    public bool moveOK = false;
 
-	// このキャラクターを削除する
-	public void Delete()
-	{
-		Destroy(gameObject);
-	}
-	
-	// Update is called once per frame
-	void Update()
-	{
-		FirstInUpdate();
-		
-		
-		// ===================================================
-		// AIを作りましょう
-		// 死亡チェック
-		if(!useBehaviorTree){
-			GameManager.instance.DispStr("Bat" + set + ":" + state + ":" + new Vector2(position.x, position.y));
-			if (life <= 0 && state != State.DEAD) {
-				StateChange(State.DEAD);
-			}
-		
-			switch(state){
-				case State.WAIT:
-					Wait();
-					break;
-				case State.MOVE:
-					Move();
-					break;
-				case State.DEAD:
-					Dead();
-					break;
-			};
-		}else{
-			GameManager.instance.DispStr("Behavior Tree");
-			// ビヘイビアツリーを使う
-			rootNode.ExecuteAsRoot();
-		}
-		// ===================================================
-		
-		if(!isHitted){
-			// AIではなくゲームシステム側でヒットストップを実装
-			Movement();
-		}
-	}
-	
-	// 自キャラの移動処理をまとめています
-	void Movement(){
-		// 向き処理
-		GetComponent<SpriteRenderer>().flipX = facingLeft;
-		// 移動処理
-		Vector3 pos = transform.position;
-		pos.x += speed.x * Time.deltaTime;
-		pos.y += speed.y * Time.deltaTime;
-		// 簡易地形アタリ判定
-		if(pos.y < 0.8f){
-			pos.y = 0.8f;
-		}
-		transform.position = pos;
-	}
-	
-	// ===============================================================
-	// 以下、このシステムの処理
-	
-	// ダメージを受ける：プレイヤー側がコールする仕組みになっています
-	public void ApplyDamage(float damage) {
-		if (!isInvincible) 
-		{
-			// 攻撃を受けた方向が取れる仕組みになっています
-			float direction = damage / Mathf.Abs(damage);
-			damage = Mathf.Abs(damage);
-			life -= damage;
-			if(hitCoroutine != null)
-			{
-				StopCoroutine(hitCoroutine);
-			}
-			hitCoroutine = StartCoroutine(HitTime());
-		}
-	}
-	
-	// 無敵時間の設定 : WaitForSecondsで設定している間、isHittedとisInvinsibleをtrueにする
-	IEnumerator HitTime()
-	{
-		isHitted = true;
-		isInvincible = true;
-		yield return new WaitForSeconds(0.5f);
-		isHitted = false;
-		isInvincible = false;
-		hitCoroutine = null;
-	}
-	
-	// プレイヤーとの接触時の処理
-	void OnTriggerEnter2D(Collider2D collider)
-	{
-		// プレイヤーに体当たり攻撃
-		if (collider.gameObject.tag == "Player" && life > 0)
-		{
-			collider.gameObject.GetComponent<CharacterController2D>().ApplyDamage(2f, transform.position);
-		}
-	}
-	
+    // トークン関連
+    private TokenSource tokenSource;
+    private Token myAttackToken = null;
+
+    bool isInvincible = false;
+    bool isHitted = false;
+
+    Animator animator;
+    public EnemyComp tool;
+    private Coroutine hitCoroutine;
+
+    public bool facingLeft = true;
+    public Vector2 speed = Vector2.zero;
+
+    // 個体差を作るためのランダム値
+    float randomOffset;
+
+    enum State
+    {
+        SEARCH, // 徘徊
+        CHASE,  // 妨害
+        ATTACK_RESPONSE, // 連携攻撃
+        DEAD,
+    };
+    State state = State.SEARCH;
+
+    float noiseTimer = 0f;
+    Vector2 noiseOffset;
+
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+        tool = new EnemyComp(this.gameObject);
+
+        // 生成時に個体差を設定（動きのタイミングをずらす）
+        randomOffset = Random.Range(0f, 100f);
+
+        // 最初の目標地点もランダムに設定
+        noiseOffset = new Vector2(Random.Range(-2f, 2f), Random.Range(1f, 3f));
+    }
+
+    //チーム全員で同じBlackBoardを共有するための設定
+    public void SetSquadBoard(BlackBoard board)
+    {
+        this.squadBoard = board;
+    }
+
+    // トークンソースを受け取る
+    public void SetTokenSource(TokenSource source)
+    {
+        this.tokenSource = source;
+    }
+
+    void Update()
+    {
+        if (life <= 0 && state != State.DEAD)
+        {
+            state = State.DEAD;
+        }
+
+        switch (state)
+        {
+            case State.SEARCH:
+                SearchLogic();
+                break;
+            case State.CHASE:
+                ChaseLogic();
+                break;
+            case State.ATTACK_RESPONSE:
+                AttackResponseLogic();
+                break;
+            case State.DEAD:
+                DeadAction();
+                break;
+        }
+        ;
+
+        // 攻撃ステート以外に遷移したらトークンを返す★★★★★★★★★★★★
+        if (state != State.ATTACK_RESPONSE && myAttackToken != null)
+        {
+            myAttackToken.Return();
+            myAttackToken = null;
+        }
+
+        if (!isHitted && state != State.DEAD)
+        {
+            Movement();
+        }
+    }
+
+    // 1. 捜索
+    void SearchLogic()
+    {
+        // 個体差を加味して上下左右に移動
+        speed.x = Mathf.Cos((Time.time + randomOffset) * 1.0f) * 1.5f;
+        speed.y = Mathf.Sin((Time.time + randomOffset) * 1.5f) * 1.5f;
+        facingLeft = speed.x < 0;
+
+        // 仲間と重ならないように反発力を加える
+        speed += GetSeparationVector() * 1.0f;
+
+        if (squadBoard == null) return;
+
+        int squadState;
+        squadBoard.GetValue(BlackBoardKey.SquadState, out squadState);
+
+        // 自身で発見するか、チーム共有情報で追跡へ移行
+        if (tool.DistanceToPlayer() < 5.0f && !IsPlayerHidden())
+        {
+            squadBoard.SetValue(BlackBoardKey.SquadState, 1);
+            state = State.CHASE;
+        }
+        else if (squadState == 1)
+        {
+            state = State.CHASE;
+        }
+    }
+
+    // 2. 追跡
+    void ChaseLogic()
+    {
+        int squadState;
+        squadBoard.GetValue(BlackBoardKey.SquadState, out squadState);
+        // プレイヤーを見失うか、チームが捜索に戻ったら戻る
+        if (IsPlayerHidden() || squadState == 0)
+        {
+            state = State.SEARCH;
+            return;
+        }
+
+        // 攻撃指令が出ているか確認
+        int command;
+        squadBoard.GetValue(BlackBoardKey.BatCommand, out command);
+        if (command != 0)
+        {
+            state = State.ATTACK_RESPONSE;
+            return;
+        }
+
+        Vector2 targetPos = tool.PlayerPosition();
+        noiseTimer -= Time.deltaTime;
+
+        // 目標地点の更新タイミングを個体ごとにずらす
+        if (noiseTimer <= 0)
+        {
+            // プレイヤーの周りをランダムに飛ぶ
+            noiseOffset = new Vector2(Random.Range(-3f, 3f), Random.Range(0.5f, 3.5f));
+            noiseTimer = 1.0f + Random.Range(0f, 0.5f);
+        }
+
+        Vector2 dest = targetPos + noiseOffset;
+        Vector2 dir = (dest - (Vector2)transform.position).normalized;
+        speed = dir * 3.0f;
+
+        // 追跡中も仲間との距離を保つ
+        speed += GetSeparationVector() * 2.0f;
+
+        facingLeft = (targetPos.x < transform.position.x);
+    }
+
+    // 3. 連携攻撃
+    void AttackResponseLogic()
+    {
+        int command;
+        squadBoard.GetValue(BlackBoardKey.BatCommand, out command);
+
+        // コマンド解除で追跡へ戻る
+        if (command == 0)
+        {
+            state = State.CHASE;
+            return;
+        }
+
+        // トークンを持っていなければ取得を試みる★★★★★★★★★★★★★
+        if (myAttackToken == null && tokenSource != null)
+        {
+            myAttackToken = tokenSource.GetToken();
+        }
+
+        if (myAttackToken != null)
+        {
+            // 攻撃権あり：指令を実行
+            Vector2 playerPos = tool.PlayerPosition();
+            if (command == 1) // 突進
+            {
+                Vector2 dir = (playerPos - (Vector2)transform.position).normalized;
+                speed = dir * 8.0f;
+            }
+            else if (command == 2) // 回転
+            {
+                float rotSpeed = 5.0f;
+                float radius = 2.0f;
+                // 回転の開始位置も個体差をつける
+                Vector2 offset = (Vector2)transform.position - playerPos;
+                float angle = Mathf.Atan2(offset.y, offset.x);
+                angle += rotSpeed * Time.deltaTime;
+                Vector2 nextPos = playerPos + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                speed = (nextPos - (Vector2)transform.position) / Time.deltaTime;
+            }
+        }
+        else
+        {
+            // 攻撃権なし：順番待ち待機
+            Vector2 targetPos = tool.PlayerPosition();
+
+            // 個体差を使って待機場所を円周上に分散させる
+            float waitAngle = (Time.time * 0.5f) + randomOffset;
+            Vector2 waitOffset = new Vector2(Mathf.Cos(waitAngle), Mathf.Sin(waitAngle)) * 3.0f;
+            waitOffset.y = Mathf.Abs(waitOffset.y) + 1.5f; // プレイヤーより上を維持
+
+            Vector2 dest = targetPos + waitOffset;
+            Vector2 dir = (dest - (Vector2)transform.position).normalized;
+            speed = dir * 2.5f;
+
+            // 待機中も重ならないように調整
+            speed += GetSeparationVector() * 1.5f;
+
+            facingLeft = (targetPos.x < transform.position.x);
+        }
+    }
+
+    // 仲間と近すぎたら離れるベクトルを計算する
+    Vector2 GetSeparationVector()
+    {
+        Vector2 separateForce = Vector2.zero;
+        GameObject[] siblings = tool.GetSinblings(); // 自分以外の仲間を取得
+
+        if (siblings == null) return Vector2.zero;
+
+        float separationDist = 1.0f; // この距離より近づいたら離れる
+
+        foreach (var sibling in siblings)
+        {
+            if (sibling == null) continue;
+
+            float dist = Vector2.Distance(transform.position, sibling.transform.position);
+
+            // 近すぎる場合
+            if (dist < separationDist && dist > 0.01f) // 0除算防止
+            {
+                // 相手と逆方向へのベクトルを作る
+                Vector2 away = (Vector2)transform.position - (Vector2)sibling.transform.position;
+                // 近ければ近いほど強い力で反発する
+                separateForce += away.normalized / dist;
+            }
+        }
+        return separateForce;
+    }
+
+    public void DeadAction()
+    {
+        // 死亡時にトークンを返却★★★★★★★★★★★★★★
+        if (myAttackToken != null)
+        {
+            myAttackToken.Return();
+            myAttackToken = null;
+        }
+        animator.SetBool("IsDead", true);
+        speed = Vector2.zero;
+        Destroy(gameObject, 1.0f);
+    }
+
+    public void Delete()
+    {
+        Destroy(gameObject);
+    }
+
+    void OnDestroy()
+    {
+        // 削除時にトークンを返却★★★★★★★★★★★★★★★★★
+        if (myAttackToken != null)
+        {
+            myAttackToken.Return();
+        }
+    }
+
+    void Movement()
+    {
+        GetComponent<SpriteRenderer>().flipX = facingLeft;
+        Vector3 pos = transform.position;
+        pos.x += speed.x * Time.deltaTime;
+        pos.y += speed.y * Time.deltaTime;
+        if (pos.y < 0.8f) pos.y = 0.8f;
+        transform.position = pos;
+    }
+
+    bool IsPlayerHidden()
+    {
+        if (tool.DistanceToPlayer() > 15.0f) return true;
+        return false;
+    }
+
+    public void ApplyDamage(float damage)
+    {
+        if (!isInvincible)
+        {
+            float direction = damage / Mathf.Abs(damage);
+            damage = Mathf.Abs(damage);
+            life -= damage;
+            if (hitCoroutine != null) StopCoroutine(hitCoroutine);
+            hitCoroutine = StartCoroutine(HitTime());
+        }
+    }
+
+    IEnumerator HitTime()
+    {
+        isHitted = true;
+        isInvincible = true;
+        yield return new WaitForSeconds(0.5f);
+        isHitted = false;
+        isInvincible = false;
+        hitCoroutine = null;
+    }
+
+    void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.gameObject.tag == "Player" && life > 0)
+        {
+            collider.gameObject.GetComponent<CharacterController2D>().ApplyDamage(1f, transform.position);
+        }
+    }
 }
