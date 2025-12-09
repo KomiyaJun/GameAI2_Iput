@@ -54,6 +54,11 @@ public class Soldier_FSM_Wait : Soldier_FSM_Base
 		if(check > 0){
 			return Soldier.State.RUN;
 		}
+
+		//蝙蝠側からプレイヤー発見トークンが発行されていたら
+		//return Soldier.State.Chase;
+		//KomoriToken.return(); 蝙蝠の発見トークンを返却
+
 		return Soldier.State.WAIT;
 	}
 	
