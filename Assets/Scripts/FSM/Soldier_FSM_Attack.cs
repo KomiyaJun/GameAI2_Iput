@@ -5,7 +5,8 @@ using UnityEngine;
 public class Soldier_FSM_Attack : Soldier_FSM_Base
 {
 	float timer;
-	
+
+
 	public Soldier_FSM_Attack(Soldier s) : base(s)
 	{
 		
@@ -34,6 +35,10 @@ public class Soldier_FSM_Attack : Soldier_FSM_Base
 		if(timer < 0){
 			return Soldier.State.WAIT;
 		}
+
+		//ƒvƒŒƒCƒ„[‚ðŒ©Ž¸‚Á‚½‚ç
+		//return Soldier.State.Wait;
+
 		return Soldier.State.MELEE_ATTACK;
 	}
 	

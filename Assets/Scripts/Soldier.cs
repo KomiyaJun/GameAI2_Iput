@@ -50,10 +50,24 @@ public class Soldier : MonoBehaviour
 	public bool leader;
 	public int set;
 	Soldier[] teamMember;
-	
-	// ------------------------------------------------------
-	// Start is called before the first frame update
-	void Start()
+
+    // ------------------------------------------------------
+
+
+    //==================小宮=====================
+
+    //トークン
+    //近接攻撃が当たったことを通知するためのトークン
+    TokenSource MeleeToken = new TokenSource(1);
+
+	//遠距離攻撃が当たったことを通知するためのトークン
+	TokenSource RangeToken = new TokenSource(1);
+
+
+
+
+    // Start is called before the first frame update
+    void Start()
 	{
 		tool = new EnemyComp(this.gameObject);
 		animator = GetComponent<Animator>();
@@ -184,6 +198,8 @@ public class Soldier : MonoBehaviour
 				collidersEnemies[i].gameObject.GetComponent<CharacterController2D>().ApplyDamage(2f, transform.position);
 			}
 		}
+
+		OnMeleeAttackHit();	//近接攻撃トークンを発生
 	}
 	
 	void ChangeBodyHitToDead(){
@@ -236,5 +252,18 @@ public class Soldier : MonoBehaviour
 		Vector2 direction = new Vector2(speed, 0f);
 		throwableProj.GetComponent<ThrowableProjectile>().direction = direction;
 	}
+
+	//遠距離攻撃トークンを起動
+	public void OnRangeAttackHit()
+	{
+		Debug.Log("遠距離攻撃が当たりました。");
+		RangeToken.GetToken();
+	}
 	
+
+	public void OnMeleeAttackHit()
+	{
+		Debug.Log("近距離攻撃が当たりました");
+		MeleeToken.GetToken();
+	}
 }

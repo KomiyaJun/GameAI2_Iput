@@ -22,6 +22,15 @@ public class ThrowableProjectile : MonoBehaviour
 		{
 			collision.gameObject.GetComponent<CharacterController2D>().ApplyDamage(2f, transform.position);
 			Destroy(gameObject);
+			
+			if(owner != null)
+			{
+				Soldier soldier = owner.GetComponent<Soldier>();
+				if (soldier != null)
+				{
+					soldier.OnRangeAttackHit();//遠距離攻撃が当たったことを通知するトークン
+				}
+			}
 		}
 		else if ( owner != null && collision.gameObject != owner && collision.gameObject.tag == "Enemy" )
 		{
