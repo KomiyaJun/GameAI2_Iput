@@ -13,7 +13,7 @@ public class Leaf_DeadPose : TreeNode_Base
 		base.OnEnter();
 		bat.speed.x = 0.0f;
 		bat.speed.y = 0.0f;
-		bat.DeadAction();
+	
 		timer=5f;
 	}
 

@@ -4,63 +4,59 @@ using UnityEngine;
 
 public class Soldier_FSM_Wait : Soldier_FSM_Base
 {
-	public Soldier_FSM_Wait(Soldier s) : base(s)
-	{
-		
-	}
-	
-	public override void OnEnter()
-	{
-		soldier.WaitAction();
-		soldier.speed.x = 0.0f;    // 右が+。左が-になります
-		soldier.speed.y = 0.0f;    // 上が+、下が-になります
-	}
-	
-	public override void OnUpdate()
-	{
-		// 例えば
-		if(soldier.tool.DistanceToPlayer() < 3f){
-			// ブラックボードにメッセージを書く
-			GameManager.instance.blackBoard.SetValue(BlackBoardKey.Move, 1);
-			// 以下、書き込みの例
-			GameManager.instance.blackBoard.SetValue(BlackBoardKey.Time, 3f);
-			GameManager.instance.blackBoard.SetValue(BlackBoardKey.Target, new Vector2(1f,0f));
-		}
-		
-		// 以下、読み込みの例
-		{
-			Vector2 value;
-			GameManager.instance.blackBoard.GetValue(BlackBoardKey.Target, out value);
-			float waitTime;
-			GameManager.instance.blackBoard.GetValue(BlackBoardKey.Time, out waitTime);
-		}
-		
-	}
-	
-	public override void OnExit()
-	{
-		
-	}
-	
-	public override Soldier.State CheckTransitions()
-	{
-		if(soldier.isHitted){
-			return Soldier.State.DAMAGE;
-		}
-			
-		// 移動サインを誰かが書きこんでいたら移動開始
-		int check = 0;
-		GameManager.instance.blackBoard.GetValue(BlackBoardKey.Move, out check);
-		if(check > 0){
-			return Soldier.State.RUN;
-		}
+    public Soldier_FSM_Wait(Soldier s) : base(s)
+    {
 
-		//蝙蝠側からプレイヤー発見トークンが発行されていたら
-		//return Soldier.State.Chase;
-		//KomoriToken.return(); 蝙蝠の発見トークンを返却
+    }
 
-		return Soldier.State.WAIT;
-	}
-	
+    public override void OnEnter()
+    {
+        soldier.WaitAction();
+        soldier.speed.x = 0.0f;
+        soldier.speed.y = 0.0f;
+    }
+
+    public override void OnUpdate()
+    {
+        // 既存のコードにあるGameManager経由の処理は、もしGameManagerを使わないなら削除してOKです
+        // ここではサンプルとして残しておきますが、遷移チェックは CheckTransitions で行います
+    }
+
+    public override void OnExit()
+    {
+
+    }
+
+    public override Soldier.State CheckTransitions()
+    {
+        if (soldier.isHitted)
+        {
+            return Soldier.State.DAMAGE;
+        }
+
+        // ■■■ 修正：ブラックボードの SquadState を監視 ■■■
+        if (soldier.squadBoard != null)
+        {
+            int squadState;
+            soldier.squadBoard.GetValue(BlackBoardKey.SquadState, out squadState);
+
+            // Batが発見モード(1)に書き換えていたら、Soldierも追跡(RUN)へ
+            if (squadState == 1)
+            {
+                return Soldier.State.RUN;
+            }
+        }
+
+        // ソルジャー自身がプレイヤーを近くで見つけた場合も追跡へ（オプション）
+        if (soldier.tool.DistanceToPlayer() < 5.0f)
+        {
+            // 自身で見つけた場合、チーム全体に通知するためにブラックボードを書き換える
+            if (soldier.squadBoard != null)
+                soldier.squadBoard.SetValue(BlackBoardKey.SquadState, 1);
+
+            return Soldier.State.RUN;
+        }
+
+        return Soldier.State.WAIT;
+    }
 }
-

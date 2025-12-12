@@ -10,7 +10,7 @@ public class Leaf_Delete : TreeNode_Base
 	
 	protected override BT_Status OnUpdate()
 	{
-		bat.Delete();
+	
 		return BT_Status.SUCCESS;
 	}
 
