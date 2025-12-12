@@ -63,37 +63,51 @@ public class Soldier : MonoBehaviour
 	//遠距離攻撃が当たったことを通知するためのトークン
 	TokenSource RangeToken = new TokenSource(1);
 
+	[SerializeField]public BlackBoard squadBoard;
 
-
+    public float timeSinceLastHit = 0f;
 
     // Start is called before the first frame update
     void Start()
-	{
-		tool = new EnemyComp(this.gameObject);
-		animator = GetComponent<Animator>();
-		attackCheck = transform.Find("AttackCheck").transform;
-		rb = GetComponent<Rigidbody2D>();
+    {
+        tool = new EnemyComp(this.gameObject);
+        animator = GetComponent<Animator>();
+        attackCheck = transform.Find("AttackCheck").transform;
+        rb = GetComponent<Rigidbody2D>();
 
-		// チームメンバーを取得
-		GameObject[] allies = tool.GetSinblings();
-		teamMember = new Soldier[allies.Length];
-		for (int i = 0; i < teamMember.Length; i++)
+        GameObject[] allies = tool.GetSinblings();
+        teamMember = new Soldier[allies.Length];
+        for (int i = 0; i < teamMember.Length; i++)
+        {
+            teamMember[i] = allies[i].GetComponent<Soldier>();
+        }
+
+        availableStates.Add(new Soldier_FSM_Wait(this));
+        availableStates.Add(new Soldier_FSM_Run(this)); // Runステートの実装が必要
+        availableStates.Add(new Soldier_FSM_Attack(this));
+        availableStates.Add(new Soldier_FSM_RangeAttack(this));
+        availableStates.Add(new Soldier_FSM_Damage(this));
+        availableStates.Add(new Soldier_FSM_Dead(this));
+
+        currentState = State.WAIT;
+        availableStates[(int)currentState].OnEnter();
+
+        if (Bat.squadBoard != null)
+        {
+            squadBoard = GameManager.instance.blackBoard;
+        }
+
+		if(BoardM.instance != null)
 		{
-			teamMember[i] = allies[i].GetComponent<Soldier>();
+			squadBoard = BoardM.instance.sharedBoard;
 		}
-
-		availableStates.Add(new Soldier_FSM_Wait(this));
-		availableStates.Add(new Soldier_FSM_Run(this));
-		availableStates.Add(new Soldier_FSM_Attack(this));
-		availableStates.Add(new Soldier_FSM_RangeAttack(this));
-		availableStates.Add(new Soldier_FSM_Damage(this));
-		availableStates.Add(new Soldier_FSM_Dead(this));
-
-		currentState = State.WAIT;
-		availableStates[(int)currentState].OnEnter();
-	}
-	
-	void OnDestroy()
+		else
+		{
+			Debug.LogError("BoardManagerがシーンにありません。");
+		}
+			
+    }
+    void OnDestroy()
 	{
 		if(hitCoroutine != null){
 			StopCoroutine(hitCoroutine);
@@ -150,39 +164,36 @@ public class Soldier : MonoBehaviour
 	{
 		Destroy(gameObject);
 	}
-	
-	// Update is called once per frame
-	void Update()
-	{
-		FirstInUpdate();
-	
-		// ===================================================
-		// AIを作りましょう
-		State nextState = availableStates[(int)currentState].CheckTransitions();
-		// 死亡は強制的に変更
-		if (life <= 0 && currentState != State.DEAD) {
-			nextState = State.DEAD;
-		}
-		
-		if (nextState != currentState)
-		{
-			//今のステートを終了
-			availableStates[(int)currentState].OnExit();
-			//次のステートの前処理
-			availableStates[(int)nextState].OnEnter();
-			//新しいステートを記録
-			currentState = nextState;
-		}
-		//ステート実行
-		availableStates[(int)currentState].OnUpdate();
-		// ===================================================
-		
-		Movement();
-	}
-	
-	
-	// 自キャラの移動処理をまとめています
-	void Movement(){
+
+    // Update is called once per frame
+    void Update()
+    {
+        FirstInUpdate();
+
+
+        // ■■■ 追加：時間の計測 ■■■
+        // 攻撃が当たらない間、どんどんカウントアップされていく
+        timeSinceLastHit += Time.deltaTime;
+
+        State nextState = availableStates[(int)currentState].CheckTransitions();
+        if (life <= 0 && currentState != State.DEAD)
+        {
+            nextState = State.DEAD;
+        }
+
+        if (nextState != currentState)
+        {
+            availableStates[(int)currentState].OnExit();
+            availableStates[(int)nextState].OnEnter();
+            currentState = nextState;
+        }
+        availableStates[(int)currentState].OnUpdate();
+
+        Movement();
+    }
+
+    // 自キャラの移動処理をまとめています
+    void Movement(){
 		// 向き処理
 		GetComponent<SpriteRenderer>().flipX = !facingLeft;
 		// 移動処理
@@ -253,17 +264,45 @@ public class Soldier : MonoBehaviour
 		throwableProj.GetComponent<ThrowableProjectile>().direction = direction;
 	}
 
-	//遠距離攻撃トークンを起動
-	public void OnRangeAttackHit()
-	{
-		Debug.Log("遠距離攻撃が当たりました。");
-		RangeToken.GetToken();
-	}
-	
+    //遠距離攻撃トークンを起動
+    public void OnRangeAttackHit()
+    {
+        // ■■■ 追加：ヒットしたのでタイマーをリセット（満足してまた遠距離攻撃するようになる） ■■■
+        timeSinceLastHit = 0f;
 
-	public void OnMeleeAttackHit()
-	{
-		Debug.Log("近距離攻撃が当たりました");
-		MeleeToken.GetToken();
-	}
+        Debug.Log("遠距離攻撃が当たりました。Batへ突進指令(1)を出します");
+        RangeToken.GetToken();
+
+        if (squadBoard != null)
+        {
+            squadBoard.SetValue(BlackBoardKey.BatCommand, 1);
+            StartCoroutine(ResetCommandTimer());
+        }
+    }
+
+    // 近距離攻撃ヒット時の処理（既存）
+    public void OnMeleeAttackHit()
+    {
+        // ■■■ 追加：近接でも当たればリセット ■■■
+        timeSinceLastHit = 0f;
+
+        Debug.Log("近距離攻撃が当たりました。Batへ回転指令(2)を出します");
+        MeleeToken.GetToken();
+
+        if (squadBoard != null)
+        {
+            squadBoard.SetValue(BlackBoardKey.BatCommand, 2);
+            StartCoroutine(ResetCommandTimer());
+        }
+    }
+    // 指令を一定時間後に解除するコルーチン
+    IEnumerator ResetCommandTimer()
+    {
+        yield return new WaitForSeconds(1.0f); // 1秒間だけ指令を有効にする
+        if (squadBoard != null)
+        {
+            squadBoard.SetValue(BlackBoardKey.BatCommand, 0);
+        }
+    }
+
 }
