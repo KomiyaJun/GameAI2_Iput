@@ -105,4 +105,22 @@ public class BehaviorMonitor : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, smartDistance); // 遠距離ライン
     }
+
 }
+
+/* 外部スクリプトからの呼び出し例
+var monitor = playerObject.GetComponent<BehaviorMonitor>();
+var style = monitor.GetResult();
+
+switch (style)
+{
+case BehaviorMonitor.PlayStyle.Aggressive:
+    Debug.Log("アグレッシブなプレイヤー！");
+    break;
+case BehaviorMonitor.PlayStyle.Smart:
+    Debug.Log("堅実なプレイヤー！");
+    break;
+case BehaviorMonitor.PlayStyle.Offensive:
+    Debug.Log("攻撃的なプレイヤー！");
+    break;
+}*/

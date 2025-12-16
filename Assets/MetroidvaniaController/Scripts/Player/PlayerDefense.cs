@@ -9,8 +9,11 @@ public class PlayerDefense : MonoBehaviour
 
     [Header("Parry Settings")]
     public float parryWindow = 1f;      // パリィ受付時間
-    public float parryRecovery = 0.8f;    // パリィ失敗時の硬直時間
+    public float parryRecovery = 1.5f;    // パリィ失敗時の硬直時間
     public float failPenalty = 1.5f;      // パリィ失敗時の被ダメ倍率
+
+    [Header("Hit Stop Settings")]
+    public float hitStopDuration = 0.15f;
 
     [Header("Guard Settings")]
     public float damageReduction = 0.5f;  // ガード時のダメージ倍率
@@ -129,7 +132,21 @@ public class PlayerDefense : MonoBehaviour
         if (shieldRenderer) shieldRenderer.color = Color.white;
         Debug.Log("Parry Success! Counter Ready.");
 
+        StartCoroutine(ApplyHitStop());
+
         StartCoroutine(CounterWindow());
+    }
+
+    IEnumerator ApplyHitStop()
+    {
+        //時間を止める
+        Time.timeScale = 0f;
+
+        //実時間で待機
+        yield return new WaitForSecondsRealtime(hitStopDuration);
+
+        // 時間を元に戻す
+        Time.timeScale = 1f;
     }
 
     // カウンター受付猶予
