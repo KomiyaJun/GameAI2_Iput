@@ -32,9 +32,16 @@ public class Soldier_FSM_Wait : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		
-		if(soldier.tool.DistanceToPlayer() < 2f){
-			return Soldier.State.RUN;
-		}
+		if(soldier.tool.DistanceToPlayer() < 10f){
+            if (Random.Range(0, 100) < 50)
+            {
+                return Soldier.State.RUN;
+            }
+			else
+			{
+				return Soldier.State.Meteo;
+			}
+        }
 		return Soldier.State.WAIT;
 	}
 	

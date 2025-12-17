@@ -14,7 +14,9 @@ public class Soldier_FSM_RangeAttack : Soldier_FSM_Base
 	public override void OnEnter()
 	{
 		soldier.RangeAttackAction();
-		timer = 5f;
+        soldier.speed.x = 0.0f;    // ‰E‚ª+B¶‚ª-‚É‚È‚è‚Ü‚·
+        soldier.speed.y = 0.0f;    // ã‚ª+A‰º‚ª-‚É‚È‚è‚Ü‚·
+        timer = 5f;
 	}
 	
 	public override void OnUpdate()
