@@ -35,12 +35,18 @@ public class Soldier_FSM_Run : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		float d = soldier.tool.DistanceToPlayer();
-		if(d < 2f){
+
+		if(d < 1.5f){
 			return Soldier.State.MELEE_ATTACK;
-		}else if(d < 8f){
-			return Soldier.State.RANGE_ATTACK;
 		}
-		return Soldier.State.RUN;
+		/*else if(d < 8f){
+			return Soldier.State.RANGE_ATTACK;
+		}*/
+        if (d>=10)
+        {
+			return Soldier.State.WAIT;
+        }
+        return Soldier.State.RUN;
 	}
 	
 }

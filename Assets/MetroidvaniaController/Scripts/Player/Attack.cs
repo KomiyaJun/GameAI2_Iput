@@ -154,6 +154,7 @@ public class Attack : MonoBehaviour
 
         for (int i = 0; i < collidersEnemies.Length; i++)
         {
+            float time = 0.2f;
             if (collidersEnemies[i].gameObject.tag == "Enemy")
             {
                 // 敵とプレイヤーの位置関係からノックバック方向（ダメージの符号）を決定
@@ -167,7 +168,7 @@ public class Attack : MonoBehaviour
                 collidersEnemies[i].gameObject.SendMessage("ApplyDamage", appliedDamage);
 
                 // ヒット時のカメラシェイク実行
-                if (cam != null) cam.GetComponent<CameraFollow>().ShakeCamera();
+                if (cam != null) cam.GetComponent<CameraFollow>().ShakeCamera(time);
             }
         }
     }

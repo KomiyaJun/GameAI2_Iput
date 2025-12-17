@@ -4,7 +4,10 @@ using UnityEngine;
 
 public class Soldier_FSM_Attack : Soldier_FSM_Base
 {
-	float timer;
+    const float CHARGE_TIME = 0.7f;
+    const float COOLDOWN_TIME = 0.3f;
+    float timer;
+	bool check = false;
 	
 	public Soldier_FSM_Attack(Soldier s) : base(s)
 	{
@@ -13,14 +16,25 @@ public class Soldier_FSM_Attack : Soldier_FSM_Base
 	
 	public override void OnEnter()
 	{
-		soldier.AttackAction();
-		timer = 0.5f;
-	}
+		soldier.WaitAction();
+        soldier.speed.x = 0.0f;    // âEÇ™+ÅBç∂Ç™-Ç…Ç»ÇËÇ‹Ç∑
+        soldier.speed.y = 0.0f;
+        timer = CHARGE_TIME;
+		check = false;
+
+    }
 	
 	public override void OnUpdate()
 	{
 		timer -= Time.deltaTime;
-	}
+		if(timer <= 0f&&check==false)
+		{
+            soldier.AttackAction();
+            check = true;
+            timer = COOLDOWN_TIME;
+        }
+        
+    }
 	
 	public override void OnExit()
 	{
@@ -32,7 +46,8 @@ public class Soldier_FSM_Attack : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		if(timer < 0){
-			return Soldier.State.WAIT;
+			check = false;
+			return Soldier.State.Shout;
 		}
 		return Soldier.State.MELEE_ATTACK;
 	}
