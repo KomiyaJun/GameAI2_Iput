@@ -22,7 +22,32 @@ public class FieldManager : MonoBehaviour
 
     private void Start()
     {
-        SetField(nowField);
+        //SetField(nowField);
+        InitializedFields();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.U)){
+            SetField(nowField);
+        }
+    }
+
+    private void InitializedFields()
+    {
+        foreach (GameObject fieldObj in FieldClassList)
+        {
+            // nullチェックをしつつ取得を試みる（安全かつ高速）
+            if (fieldObj.TryGetComponent<IField>(out IField fieldComponent))
+            {
+                fieldComponent.OnInitializeField();
+            }
+            else
+            {
+                // 必要であれば、IFieldが見つからなかった場合のログを出す
+                Debug.LogWarning($"{fieldObj.name} に IField がアタッチされていません");
+            }
+        }
     }
 
     private void PlayerActionCount()
@@ -45,13 +70,14 @@ public class FieldManager : MonoBehaviour
     /// <param name="field"></param>
     public void SetField(Field field)
     {
-        switch(field)
+        IField iField;
+        switch (field)
         {
             case Field.Dynamic:
                 SetDynamicField();
                 nowFieldClass = FieldClassList[(int)Field.Dynamic];
 
-                IField iField = nowFieldClass.GetComponent<IField>();
+                iField = nowFieldClass.GetComponent<IField>();
                 iField.OnSetField();
                 break;
 
@@ -59,11 +85,16 @@ public class FieldManager : MonoBehaviour
                 SetAggressionField();
                 nowFieldClass = FieldClassList[(int)Field.Aggression];
 
+                iField = nowFieldClass.GetComponent<IField>();
+                iField.OnSetField();
                 break;
 
             case Field.Solid:
                 SetSolidField();
                 nowFieldClass = FieldClassList[(int)Field.Solid];
+
+                iField = nowFieldClass.GetComponent<IField>();
+                iField.OnSetField();
                 break;
 
             default:

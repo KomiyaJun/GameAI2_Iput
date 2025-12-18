@@ -81,9 +81,13 @@ public class Soldier : MonoBehaviour
 		}
 	}
 
-	// ------------------------------------------------------
-	// Start is called before the first frame update
-	void Start()
+    // ------------------------------------------------------
+    // Start is called before the first frame update
+
+    public bool isProtecting = false;     // 防御中かどうかのフラグ
+    public ShieldScript protectObject;
+
+    void Start()
 	{
 		tool = new EnemyComp(this.gameObject);
 		animator = GetComponent<Animator>();
@@ -227,8 +231,28 @@ public class Soldier : MonoBehaviour
 		capsule.direction = CapsuleDirection2D.Horizontal;
 	}
 	
+	public void StartProtect()
+	{
+		isProtecting = true;
+		protectObject.OnStartShield();
+	}
+
 	public void ApplyDamage(float damage) {
-		if (!isInvincible) 
+
+        // --- 追加部分：防御中ならシールドの処理を呼んで終了 ---
+        if (isProtecting)
+        {
+            if (protectObject != null)
+            {
+                // シールド側の「防いだときの処理」を呼び出す
+                protectObject.OnProtectDamage();
+                // 自身のダメージ処理は行わずにここで終了(return)する
+                return;
+            }
+        }
+        // --------------------------------------------------
+
+        if (!isInvincible) 
 		{
 			float direction = damage / Mathf.Abs(damage);
 			damage = Mathf.Abs(damage);
@@ -272,25 +296,25 @@ public class Soldier : MonoBehaviour
 	
 	public void Meteo()
 	{
-        {
-            // プレイヤーの位置を取得
-            Vector2 playerPos = tool.PlayerPosition();
+        //{
+        //    // プレイヤーの位置を取得
+        //    Vector2 playerPos = tool.PlayerPosition();
 
-            // メテオの生成位置を決定
-            float spawnHeight = 7.0f;
-            Vector3 spawnPosition = new Vector3(playerPos.x, playerPos.y + spawnHeight, transform.position.z);
+        //    // メテオの生成位置を決定
+        //    float spawnHeight = 7.0f;
+        //    Vector3 spawnPosition = new Vector3(playerPos.x, playerPos.y + spawnHeight, transform.position.z);
 
-            // 投擲物を生成
-            GameObject meteoProj = Instantiate(
-                MeteoObfect,
-                spawnPosition,
-                Quaternion.identity 
-            ) as GameObject;
+        //    // 投擲物を生成
+        //    GameObject meteoProj = Instantiate(
+        //        MeteoObfect,
+        //        spawnPosition,
+        //        Quaternion.identity 
+        //    ) as GameObject;
 
-            // 投擲物のコンポーネント設定
-            // Ownerを設定 (必要であれば)
-            meteoProj.GetComponent<ThrowableProjectile>().owner = gameObject;
-        }
+        //    // 投擲物のコンポーネント設定
+        //    // Ownerを設定 (必要であれば)
+        //    meteoProj.GetComponent<ThrowableProjectile>().owner = gameObject;
+        //}
     }
 
 	public void Shout()

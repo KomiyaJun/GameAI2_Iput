@@ -12,5 +12,10 @@ public interface IField
 
     }
 
+    public virtual void OnInitializeField()
+    {
+
+    }
+
 
 }

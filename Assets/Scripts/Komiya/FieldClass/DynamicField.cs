@@ -2,11 +2,12 @@ using UnityEngine;
 
 public class DynamicField : MonoBehaviour, IField
 {
-    private BoomerangTargetMove boom;
-
+    private BoomerangTargetMove boom;   //フィールド構築時のブロック移動用の参照
+    [SerializeField] private GameObject fieldObject;  
     public void OnSetField()
     {
-        if(boom == null)
+        fieldObject.SetActive(true);
+        if (boom == null)
         {
             BoomerangTargetMove animateBoom =  this.GetComponent<BoomerangTargetMove>();
             animateBoom.StartBoomerangMovement();
@@ -17,6 +18,13 @@ public class DynamicField : MonoBehaviour, IField
     public void OnEndField()
     {
         Debug.Log("DynamicフィールドのOnEndFieldが呼び出されました");
+        fieldObject.SetActive(false);
     }
 
+    public void OnInitializeField()
+    {
+        Debug.Log("DynamicフィールドのOnInitializeFieldが呼び出されました");
+        fieldObject.SetActive(false);
+
+    }
 }
