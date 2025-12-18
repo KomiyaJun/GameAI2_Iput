@@ -90,59 +90,12 @@ public class GameManager : MonoBehaviour
 	Bat leader;
 	void Update()
 	{
-		// ここからサンプル---------------------------------------------------------------------
-		// #4 メタAI：オブジェクト生成の例
 		
-		// 一つずつ出現させる例：こうもり
-		if(Input.GetKeyDown(KeyCode.Space)){
-			// 出現位置
-			Vector2 basePosition = new Vector2(default_x, 3f);
-			// グループにする
-			GameObject parent = CreateGroupParent();
-			Bat bat;
-			bat = CreateBat(basePosition, parent);
-			bat.leader = true;	// 作った後にリーダーに設定とか
-			leader = bat;	// リーダーを覚えておく（すぐ下のキャラに指示を出す例を動かすため）
-			
-			basePosition.x += 2f;
-			bat = CreateBat(basePosition, parent);
-			bat.set = 1;	// デフォルトの値から変える必要があれば他の項目も設定する
+	}
 
-			// グループにしないやつも作る
-			basePosition.x -= 4f;
-			bat = CreateBat(basePosition);
-			
-			default_x += 0.5f;	// 出現位置をずらす
-		}
-		
-		// ゲームキャラに指示を出す例
-		// Blackboard に指示を書きこむ方法もあります
-		if(leader != null && leader.gameObject != null){
-			leader.SetMoveEnable(true);	// リーダーに指示を出す
-			// ここで動かすとリーダーが Wait ステートにならないため、同じグループの Bat が動かない（メタAI側でへたに強制的に動かすと発生する問題の例）
-		}
-		
-		// 出現テーブルに合わせて出現させる例：戦士
-		if(Input.GetKeyDown(KeyCode.Tab)){
-			// 出現位置
-			Vector2 basePosition = new Vector2(default_x, 5f);
-			for(int i=0; i<3; i++){
-				Appear appear = appearTable[i];	// 出現設定を取得
-				Vector2 p = basePosition + appear.offset;
-				// トークンの数で出現数を制限してみる
-				Token token = soldierTokenSource.GetToken();
-				if(token != null){
-					Soldier soldier = CreateSoldier(p);
-					soldier.set = appear.set;	// 出現設定に合わせて設定
-					soldier.life = 1;	// デモとしてすぐに倒せるように
-					soldier.SetToken(token);	// トークンを渡す
-				}
-			}
-			
-			default_x += 0.5f;	// 出現位置をずらす
-		}
-		// ここまでサンプル---------------------------------------------------------------------
-		
+	public void OnCreateBats()
+	{
+
 	}
 	
 	void LateUpdate()
