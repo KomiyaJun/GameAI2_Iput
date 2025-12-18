@@ -50,7 +50,7 @@ public class CameraFollow : MonoBehaviour
 
 	public void ShakeCamera(float duration)
 	{
-		originalPos = camTransform.localPosition;
-		shakeDuration = duration;
+		//originalPos = camTransform.localPosition;
+		//shakeDuration = duration;
 	}
 }

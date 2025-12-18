@@ -32,7 +32,7 @@ public class Soldier_FSM_Wait : Soldier_FSM_Base
 			return Soldier.State.DAMAGE;
 		}
 		
-		if(soldier.tool.DistanceToPlayer() < 10f){
+		if(soldier.tool.DistanceToPlayer() < 1000f){
             if (Random.Range(0, 100) < 50)
             {
                 return Soldier.State.RUN;

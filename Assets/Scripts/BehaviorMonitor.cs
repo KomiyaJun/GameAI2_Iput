@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using Unity.VisualScripting;
 
 public class BehaviorMonitor : MonoBehaviour
 {
@@ -81,18 +82,35 @@ public class BehaviorMonitor : MonoBehaviour
     // Œ‹‰Ê‚ğæ“¾‚·‚éŠÖ”
     public PlayStyle GetResult()
     {
+
+
         // 3‚Â‚ÌŠÔ‚ğ”äŠr‚µ‚ÄÅ‘å’l‚ğ•Ô‚·
         float maxTime = Mathf.Max(airTime, farTime, closeTime);
 
         // Å‘å’l‚Æˆê’v‚·‚é‚à‚Ì‚ğ•Ô‚·
         if (Mathf.Approximately(maxTime, airTime))
+        {   
+            ResetActionTimes();
             return PlayStyle.Aggressive;
+        }
 
         if (Mathf.Approximately(maxTime, farTime))
+        {
+            ResetActionTimes();
             return PlayStyle.Smart;
+        }
 
         // c‚é‚ÍOffensive
+        ResetActionTimes();
         return PlayStyle.Offensive;
+
+    }
+
+    private void ResetActionTimes()
+    {
+        airTime = 0f;
+        farTime = 0f;
+        closeTime = 0f;
     }
 
     // ”ÍˆÍ‚Ì‰Â‹‰»

@@ -18,9 +18,9 @@ public class Soldier_FSM_Run : Soldier_FSM_Base
 	{
 		soldier.facingLeft = soldier.tool.IsPlayerLeftside();
 		if(soldier.facingLeft){
-			soldier.speed.x = -2.5f;
+			soldier.speed.x = 0f;
 		}else{
-			soldier.speed.x = 2.5f;
+			soldier.speed.x = 0f;
 		}
 	}
 	
