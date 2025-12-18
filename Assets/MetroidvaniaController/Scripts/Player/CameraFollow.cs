@@ -48,9 +48,9 @@ public class CameraFollow : MonoBehaviour
 		}
 	}
 
-	public void ShakeCamera()
+	public void ShakeCamera(float duration)
 	{
 		originalPos = camTransform.localPosition;
-		shakeDuration = 0.2f;
+		shakeDuration = duration;
 	}
 }

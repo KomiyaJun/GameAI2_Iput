@@ -6,6 +6,7 @@ public class Soldier : MonoBehaviour
 {
 	public float life = 10;
 	public GameObject throwableObject;
+	public GameObject MeteoObfect;
 	
 	bool isInvincible = false;
 	public bool isHitted = false;
@@ -40,6 +41,8 @@ public class Soldier : MonoBehaviour
 		RANGE_ATTACK,
 		DAMAGE,
 		DEAD,
+		Meteo,
+		Shout,
 	};
 	State currentState = 0;
 	
@@ -101,8 +104,10 @@ public class Soldier : MonoBehaviour
 		availableStates.Add(new Soldier_FSM_RangeAttack(this));
 		availableStates.Add(new Soldier_FSM_Damage(this));
 		availableStates.Add(new Soldier_FSM_Dead(this));
+		availableStates.Add(new Soldier_FSM_Meteo(this));
+        availableStates.Add(new Soldier_FSM_shout(this));
 
-		currentState = State.WAIT;
+        currentState = State.WAIT;
 		availableStates[(int)currentState].OnEnter();
 	}
 	
@@ -206,7 +211,7 @@ public class Soldier : MonoBehaviour
 	// ===============================================================
 	// 以下、このシステムの処理
 	void MakeAttackHit(){
-		Collider2D[] collidersEnemies = Physics2D.OverlapCircleAll(attackCheck.position, 0.9f);
+		Collider2D[] collidersEnemies = Physics2D.OverlapCircleAll(attackCheck.position, 1.5f);
 		for (int i = 0; i < collidersEnemies.Length; i++){
 			if (collidersEnemies[i].gameObject.tag == "Player"){
 				collidersEnemies[i].gameObject.GetComponent<CharacterController2D>().ApplyDamage(2f, transform.position);
@@ -244,7 +249,7 @@ public class Soldier : MonoBehaviour
 	{
 		isHitted = true;
 		isInvincible = true;
-		yield return new WaitForSeconds(0.3f);
+		yield return new WaitForSeconds(1.3f);
 		isHitted = false;
 		isInvincible = false;
 		hitCoroutine = null;
@@ -259,10 +264,49 @@ public class Soldier : MonoBehaviour
 			offset = -offset;
 			speed = -speed;
 		}
-		GameObject throwableProj = Instantiate(throwableObject, transform.position + new Vector3(offset, -0.2f), Quaternion.identity) as GameObject;
+		GameObject throwableProj = Instantiate(throwableObject, transform.position + new Vector3(offset, -1.5f), Quaternion.identity) as GameObject;
 		throwableProj.GetComponent<ThrowableProjectile>().owner = gameObject;
 		Vector2 direction = new Vector2(speed, 0f);
 		throwableProj.GetComponent<ThrowableProjectile>().direction = direction;
 	}
 	
+	public void Meteo()
+	{
+        {
+            // プレイヤーの位置を取得
+            Vector2 playerPos = tool.PlayerPosition();
+
+            // メテオの生成位置を決定
+            float spawnHeight = 7.0f;
+            Vector3 spawnPosition = new Vector3(playerPos.x, playerPos.y + spawnHeight, transform.position.z);
+
+            // 投擲物を生成
+            GameObject meteoProj = Instantiate(
+                MeteoObfect,
+                spawnPosition,
+                Quaternion.identity 
+            ) as GameObject;
+
+            // 投擲物のコンポーネント設定
+            // Ownerを設定 (必要であれば)
+            meteoProj.GetComponent<ThrowableProjectile>().owner = gameObject;
+        }
+    }
+
+	public void Shout()
+	{
+		float time = 0;
+        CameraFollow cameraFollow = Camera.main.GetComponent<CameraFollow>();
+
+        if (cameraFollow != null)
+        {
+			time = 3f;
+            // カメラシェイクを開始
+            cameraFollow.ShakeCamera(time);
+        }
+        else
+        {
+            Debug.LogError("メインカメラに CameraFollow コンポーネントが見つかりません。");
+        }
+    }
 }
