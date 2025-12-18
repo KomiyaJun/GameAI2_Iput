@@ -11,7 +11,7 @@ public class CharacterController2D : MonoBehaviour
     [SerializeField] private LayerMask m_WhatIsGround;
     [SerializeField] private Transform m_GroundCheck;
     [SerializeField] private Transform m_WallCheck;
-
+    public float runSpeed = 10f;
     const float k_GroundedRadius = .2f;
     private bool m_Grounded;
     public bool IsGrounded => m_Grounded;
@@ -146,8 +146,20 @@ public class CharacterController2D : MonoBehaviour
             }
         }
     }
+    public void BoostSpeed(float amount, float duration)
+    {
+        StartCoroutine(SpeedBuffCoroutine(amount, duration));
+    }
+    private IEnumerator SpeedBuffCoroutine(float amount, float duration)
+    {
+        runSpeed += amount; // 速度を加算
+        Debug.Log($"スピードアップ中: 現在 {runSpeed}");
 
+        yield return new WaitForSeconds(duration); // 指定時間待機
 
+        runSpeed -= amount; // 速度を元に戻す
+        Debug.Log($"スピードアップ終了: 現在 {runSpeed}");
+    }
     public void Move(float move, bool jump, bool dash)
     {
         float currentSmooth = m_MovementSmoothing;
@@ -187,15 +199,14 @@ public class CharacterController2D : MonoBehaviour
                 if (m_Rigidbody2D.linearVelocity.y < -limitFallSpeed)
                     m_Rigidbody2D.linearVelocity = new Vector2(m_Rigidbody2D.linearVelocity.x, -limitFallSpeed);
 
-                Vector3 targetVelocity = new Vector2(move * 10f, m_Rigidbody2D.linearVelocity.y);
+                Vector3 targetVelocity = new Vector2(move * runSpeed, m_Rigidbody2D.linearVelocity.y);
 
                 m_Rigidbody2D.linearVelocity = Vector3.SmoothDamp(
                     m_Rigidbody2D.linearVelocity,
                     targetVelocity,
                     ref velocity,
-                    currentSmooth 
+                    currentSmooth
                 );
-
                 if (move > 0 && !m_FacingRight && !isWallSliding)
                 {
                     Flip();
