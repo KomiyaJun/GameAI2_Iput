@@ -40,7 +40,9 @@ public class FieldManager : MonoBehaviour
     }
 
     /// <summary>
-    /// フィールドをセッティング
+    /// 与えたfield Enumの値により、各フィールドを起動する役割を持つ
+    /// Interface IFieldを通し各フィールドクラスのOnSetFieldを呼び出す。
+    /// Dynamicフィールドならばアスレチックフィールドの設置演出等
     /// </summary>
     /// <param name="field"></param>
     public void SetField(Field field)
@@ -74,6 +76,9 @@ public class FieldManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 機動性フィールドを構築
+    /// </summary>
     private void SetDynamicField()
     {
         Debug.Log("機動性フィールドを構築");
@@ -81,6 +86,9 @@ public class FieldManager : MonoBehaviour
         //スピードアイテムを設置
     }
 
+    /// <summary>
+    /// 攻撃性フィールドを構築
+    /// </summary>
     private void SetAggressionField()
     {
         Debug.Log("攻撃性フィールドを構築");
@@ -88,6 +96,9 @@ public class FieldManager : MonoBehaviour
         //攻撃速度アイテムを設置
     }
 
+    /// <summary>
+    /// 堅実性フィールドを構築
+    /// </summary>
     private void SetSolidField()
     {
         Debug.Log("堅実性フィールドを構築");

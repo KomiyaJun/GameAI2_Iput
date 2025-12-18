@@ -1208,7 +1208,7 @@ MonoBehaviour:
   - {fileID: 2061028594}
   - {fileID: 287411855}
   - {fileID: 1222860989}
-  nowField: 2
+  nowField: 0
 --- !u!4 &896015507
 Transform:
   m_ObjectHideFlags: 0
