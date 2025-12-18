@@ -84,8 +84,11 @@ public class Soldier : MonoBehaviour
     // ------------------------------------------------------
     // Start is called before the first frame update
 
+	//自分
     public bool isProtecting = false;     // 防御中かどうかのフラグ
     public ShieldScript protectObject;
+	public GameObject player;
+	public FieldManager fieldManager;
 
     void Start()
 	{
@@ -259,7 +262,6 @@ public class Soldier : MonoBehaviour
 			animator.SetBool("Hit", true);
 			life -= damage;
 			rb.linearVelocity = Vector2.zero;
-			rb.AddForce(new Vector2(direction * 500f, 100f));
 			if(hitCoroutine != null)
 			{
 				StopCoroutine(hitCoroutine);
@@ -296,26 +298,26 @@ public class Soldier : MonoBehaviour
 	
 	public void Meteo()
 	{
-        //{
-        //    // プレイヤーの位置を取得
-        //    Vector2 playerPos = tool.PlayerPosition();
+		{
+			// プレイヤーの位置を取得
+			Vector2 playerPos = tool.PlayerPosition();
 
-        //    // メテオの生成位置を決定
-        //    float spawnHeight = 7.0f;
-        //    Vector3 spawnPosition = new Vector3(playerPos.x, playerPos.y + spawnHeight, transform.position.z);
+			// メテオの生成位置を決定
+			float spawnHeight = 7.0f;
+			Vector3 spawnPosition = new Vector3(playerPos.x, playerPos.y + spawnHeight, transform.position.z);
 
-        //    // 投擲物を生成
-        //    GameObject meteoProj = Instantiate(
-        //        MeteoObfect,
-        //        spawnPosition,
-        //        Quaternion.identity 
-        //    ) as GameObject;
+			// 投擲物を生成
+			GameObject meteoProj = Instantiate(
+				MeteoObfect,
+				spawnPosition,
+				Quaternion.identity
+			) as GameObject;
 
-        //    // 投擲物のコンポーネント設定
-        //    // Ownerを設定 (必要であれば)
-        //    meteoProj.GetComponent<ThrowableProjectile>().owner = gameObject;
-        //}
-    }
+			// 投擲物のコンポーネント設定
+			// Ownerを設定 (必要であれば)
+			meteoProj.GetComponent<ThrowableProjectile>().owner = gameObject;
+		}
+	}
 
 	public void Shout()
 	{
@@ -332,5 +334,39 @@ public class Soldier : MonoBehaviour
         {
             Debug.LogError("メインカメラに CameraFollow コンポーネントが見つかりません。");
         }
+
+		BehaviorMonitor  monitor = player.GetComponent<BehaviorMonitor>();
+
+		if (monitor == null) return;
+
+        if (monitor == null) return;
+
+        // 2. 結果（列挙型）を取得
+        BehaviorMonitor.PlayStyle style = monitor.GetResult();
+
+        // 3. 結果に応じた処理
+        switch (style)
+        {
+            case BehaviorMonitor.PlayStyle.Aggressive:
+                // 空中時間が長かった場合
+                Debug.Log("判定: Aggressive (空中主体)");
+				fieldManager.PlayerSelectAction(0);
+                break;
+
+            case BehaviorMonitor.PlayStyle.Offensive:
+                // 敵の近くにいる時間が長かった場合
+                Debug.Log("判定: Offensive (近接ごり押し)");
+                fieldManager.PlayerSelectAction(1);
+                break;
+
+            case BehaviorMonitor.PlayStyle.Smart:
+                // 敵から離れている時間が長かった場合
+                Debug.Log("判定: Smart (遠距離・慎重)");
+                fieldManager.PlayerSelectAction(2);
+                break;
+        }
+		fieldManager.SetField();
+        // デバッグ用に数値をコンソールに出す
+        Debug.Log($"詳細: Air={monitor.airTime:F1}, Close={monitor.closeTime:F1}, Far={monitor.farTime:F1}");
     }
 }

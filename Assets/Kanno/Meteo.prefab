@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 5532974359214069772}
   - component: {fileID: 5532974359214069768}
   - component: {fileID: 5711177239026607233}
+  - component: {fileID: -938813188512990396}
   m_Layer: 1
   m_Name: Meteo
   m_TagString: Untagged
@@ -165,3 +166,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bcbc115b80ec8a429dad1a7113b0973, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  direction: {x: 0, y: 0}
+  hasHit: 0
+  speed: 15
+  owner: {fileID: 0}
+--- !u!114 &-938813188512990396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5532974359214069763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f3c084e5389ac641b35ec4d4cff9022, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  direction: {x: 0, y: -1}
+  hasHit: 0
+  speed: 5
+  owner: {fileID: 0}
