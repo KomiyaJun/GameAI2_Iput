@@ -17,7 +17,7 @@ public class Soldier_FSM_Meteo : Soldier_FSM_Base
         soldier.speed.x = 0.0f;    // 右が+。左が-になります
         soldier.speed.y = 0.0f;    // 上が+、下が-になります
         soldier.Meteo();
-        timer = 5f;
+        timer = 10f;
     }
 
     // このステートで毎回実行する

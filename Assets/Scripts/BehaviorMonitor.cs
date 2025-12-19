@@ -57,6 +57,8 @@ public class BehaviorMonitor : MonoBehaviour
                 farTime += Time.deltaTime;
             }
         }
+
+        //GameManager.instance.DispStr("Dynamic: " + airTime + " Aggration: " + closeTime + " Solid; " + farTime);
     }
 
     // Å‚à‹ß‚¢“G‚ğ’T‚·ŠÖ”
